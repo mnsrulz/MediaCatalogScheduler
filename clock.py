@@ -1,4 +1,5 @@
 import sys
+import os
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 import drivewrapper as dw
@@ -10,8 +11,9 @@ def google_drive_import_media_job():
     print('Executing google drive media import job.')
     dw.execute()
 
-    
-google_drive_import_media_job()
+
+if os.environ['INITIATE_INSTANTLY'] == '1':
+    google_drive_import_media_job()
 
 
 # @blockingScheduler.scheduled_job('cron', day_of_week='mon-fri', hour=17)

@@ -54,26 +54,38 @@ def execute():
 
     service = build('drive', 'v3', credentials=creds)
 
-    # Call the Drive v3 API
-    results = service.files().list(
-        pageSize=100,
-        fields='files',
-        q="mimeType!='application/vnd.google-apps.folder' "
-          "and mimeType!='audio/mp3' and mimeType!='image/jpeg' and mimeType!='image/png' "
-          "and mimeType!='application/octet-stream' and mimeType!='application/x-subrip' "
-          "and mimeType!='text/plain' and mimeType!='application/pdf' "
-          "and mimeType!='application/vnd.google-apps.document' and not '" + ignore_folder_id +
-          "' in parents and not '" + processed_folder_id + "' in parents"
-    ).execute()
-    items = results.get('files', [])
-    if not items:
-        print('No files found.')
-    else:
-        for media_item in items:
-            persistence.persist_google_drive_item(media_item)
-            print('Calling add parent for google drive file: ' + media_item['id'])
-            service.files().update(
-                fileId=media_item['id'],
-                addParents=processed_folder_id,
-            ).execute()
+    next_page_token = ''
+
+    while True:
+        # Call the Drive v3 API
+        results = service.files().list(
+            pageSize=100,
+            pageToken=next_page_token,
+            fields='*',
+            q=f"not '{ignore_folder_id}' in parents and not '{processed_folder_id}' in parents "
+              f"and mimeType!='application/vnd.google-apps.folder' "
+              f"and mimeType!='audio/mp3'and mimeType!='image/jpeg' "
+              f"and mimeType!='image/png' and mimeType!='application/x-subrip' "
+              f"and mimeType!='text/plain' and mimeType!='application/pdf' "
+              f"and mimeType!='application/vnd.google-apps.document' and mimeType!='application/octet-stream'"
+
+        ).execute()
+        items = results.get('files', [])
+        next_page_token = results.get('nextPageToken')
+        if not items:
+            print('No files found.')
+        else:
+            print(f'Found {len(items)} items...')
+            for media_item in items:
+                persistence.persist_google_drive_item(media_item)
+                print('Calling add parent for google drive file: ' + media_item['id'])
+                service.files().update(
+                    fileId=media_item['id'],
+                    addParents=processed_folder_id,
+                ).execute()
+            print('Finished processing the records')
+
+        if not next_page_token:
+            print('No more page to process... exiting...')
+            break
 
