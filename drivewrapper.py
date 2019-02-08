@@ -24,7 +24,6 @@ def execute():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            InstalledAppFlow.from_client_config()
             if not os.path.exists('credentials.json'):
                 with open('credentials.json', 'w') as text_file:
                     gdrive_credentials = os.environ['GDRIVE_CREDENTIALS']
