@@ -3,8 +3,13 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import persistence
+import codecs
 
-SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive']
+ignore_folder_id = os.environ['GDRIVE_IGNORE_FOLDER']
+processed_folder_id = os.environ['GDRIVE_PROCESSED_FOLDER']
+persistence.initialize()
 
 
 def execute():
@@ -16,11 +21,19 @@ def execute():
     # created automatically when the authorization flow completes for the first
     # time.
 
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
+    # if not os.path.exists('token.pickle'):
+    pickled = persistence.read_gdrive_auth_token()
+    if pickled is not None:
+        print('found a token from the persistence')
+        creds = pickle.loads(codecs.decode(pickled.encode(), "base64"))
+
+    # if os.path.exists('token.pickle'):
+    #     with open('token.pickle', 'rb') as token:
+    # creds = pickle.load(token)
+
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
+        print('cred not valid or empty')
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
@@ -30,22 +43,37 @@ def execute():
                     text_file.write(gdrive_credentials)
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
-            creds = flow.run_local_server()
+            creds = flow.run_console()
         # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+        pickled = codecs.encode(pickle.dumps(creds), "base64").decode()
+        persistence.persist_gdrive_auth_token(pickled)
+
+        # with open('token.pickle', 'wb') as token:
+        #   print(creds)
+        #   pickle.dump(creds, token)
 
     service = build('drive', 'v3', credentials=creds)
 
     # Call the Drive v3 API
     results = service.files().list(
-        pageSize=10, fields="nextPageToken, files(id, name)").execute()
+        pageSize=100,
+        fields='files',
+        q="mimeType!='application/vnd.google-apps.folder' "
+          "and mimeType!='audio/mp3' and mimeType!='image/jpeg' and mimeType!='image/png' "
+          "and mimeType!='application/octet-stream' and mimeType!='application/x-subrip' "
+          "and mimeType!='text/plain' and mimeType!='application/pdf' "
+          "and mimeType!='application/vnd.google-apps.document' and not '" + ignore_folder_id +
+          "' in parents and not '" + processed_folder_id + "' in parents"
+    ).execute()
     items = results.get('files', [])
-
     if not items:
         print('No files found.')
     else:
-        print('Files:')
-        for item in items:
-            print(u'{0} ({1})'.format(item['name'], item['id']))
+        for media_item in items:
+            persistence.persist_google_drive_item(media_item)
+            print('Calling add parent for google drive file: ' + media_item['id'])
+            service.files().update(
+                fileId=media_item['id'],
+                addParents=processed_folder_id,
+            ).execute()
 
