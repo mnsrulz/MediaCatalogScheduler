@@ -10,6 +10,9 @@ def google_drive_import_media_job():
     print('Executing google drive media import job.')
     dw.execute()
 
+    
+google_drive_import_media_job()
+
 
 # @blockingScheduler.scheduled_job('cron', day_of_week='mon-fri', hour=17)
 # def scheduled_job():
