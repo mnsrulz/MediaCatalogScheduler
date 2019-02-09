@@ -69,7 +69,7 @@ def execute():
               f"and mimeType!='application/zip' and mimeType!='text/x-url' "
               f"and mimeType!='application/x-rar' and mimeType!='application/rar' "
               f"and not mimeType contains 'application/vnd' and mimeType!='application/json' "
-              f"and mimeType!='application/octet-stream'"
+              f"and mimeType!='video/mp2p' and mimeType!='application/octet-stream'"
 
         ).execute()
         items = results.get('files', [])
