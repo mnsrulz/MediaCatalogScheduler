@@ -63,11 +63,13 @@ def execute():
             pageToken=next_page_token,
             fields='*',
             q=f"not '{ignore_folder_id}' in parents and not '{processed_folder_id}' in parents "
-              f"and mimeType!='application/vnd.google-apps.folder' "
               f"and mimeType!='audio/mp3'and mimeType!='image/jpeg' "
               f"and mimeType!='image/png' and mimeType!='application/x-subrip' "
               f"and mimeType!='text/plain' and mimeType!='application/pdf' "
-              f"and mimeType!='application/vnd.google-apps.document' and mimeType!='application/octet-stream'"
+              f"and mimeType!='application/zip' and mimeType!='text/x-url' "
+              f"and mimeType!='application/x-rar' and mimeType!='application/rar' "
+              f"and not mimeType contains 'application/vnd' "
+              f"and mimeType!='application/octet-stream'"
 
         ).execute()
         items = results.get('files', [])
