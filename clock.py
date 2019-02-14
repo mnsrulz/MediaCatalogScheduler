@@ -1,31 +1,25 @@
 import sys
 import os
-import pymongo
+
 from apscheduler.schedulers.blocking import BlockingScheduler
-from datetime import datetime
-
-sched = BlockingScheduler()
-
-# Standard URI format: mongodb://[dbuser:dbpassword@]host:port/dbname
-
-uri = os.environ['DB_CONN_LOG']
+import drivewrapper as dw
+blockingScheduler = BlockingScheduler()
 
 
-@sched.scheduled_job('interval', minutes=1)
-def timed_job():
-    print('This job is run every one minutes.')
-    client = pymongo.MongoClient(uri)
-    db = client.get_database()
-    logs = db['logs']
-    logs.insert({
-        'ts': datetime.utcnow(),
-        'desc': 'Running media scheduler cron'
-    })
-    client.close()
+@blockingScheduler.scheduled_job('interval', hours=8)
+def google_drive_import_media_job():
+    print('Executing google drive media import job.')
+    dw.execute()
 
 
-@sched.scheduled_job('cron', day_of_week='mon-fri', hour=17)
-def scheduled_job():
-    print('This job is run every weekday at 5pm.')
+if os.environ['INITIATE_INSTANTLY'] == '1':
+    google_drive_import_media_job()
 
-sched.start()
+
+# @blockingScheduler.scheduled_job('cron', day_of_week='mon-fri', hour=17)
+# def scheduled_job():
+#    print('This job is run every weekday at 5pm.')
+
+
+blockingScheduler.start()
+
