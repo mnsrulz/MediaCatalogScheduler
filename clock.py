@@ -6,7 +6,7 @@ import drivewrapper as dw
 blockingScheduler = BlockingScheduler()
 
 
-@blockingScheduler.scheduled_job('interval', hours=8)
+@blockingScheduler.scheduled_job('interval', minutes=5)
 def google_drive_import_media_job():
     print('Executing google drive media import job.')
     dw.execute()
