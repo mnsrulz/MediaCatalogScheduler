@@ -32,11 +32,27 @@ def finalize():
 
 def persist_google_drive_item(media_item):
     print('saving the item')
-    db_media_catalog.insert({
-        'ts': datetime.utcnow(),
-        'source': 'google-drive',
-        'media_document': media_item
+    
+    existing_item = db_media_catalog.find_one({
+        'media_document.id': media_item['id']
     })
+
+    if existing_item is None:
+        db_media_catalog.insert({
+            'ts': datetime.utcnow(),
+            'source': 'google-drive',
+            'media_document': media_item
+        })
+    else:
+        db_media_catalog.update_one({
+            '_id': existing_item['_id']
+            },{
+                '$set': {
+                    'ts_update': datetime.utcnow(),
+                    'media_document': media_item
+                }
+            }, upsert=False)
+        print('Item already exist, need update')
     print('google drive item persisted successfully')
 
 
