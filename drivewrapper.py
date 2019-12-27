@@ -55,23 +55,24 @@ def execute():
     service = build('drive', 'v3', credentials=creds)
 
     next_page_token = ''
-
+    query = f"""not '{ignore_folder_id}' in parents
+              and mimeType!='audio/mp3'and mimeType!='image/jpeg'
+              and mimeType!='audio/x-m4a'
+              and mimeType!='image/png' and mimeType!='application/x-subrip'
+              and mimeType!='text/plain' and mimeType!='application/pdf'
+              and mimeType!='application/zip' and mimeType!='text/x-url'
+              and mimeType!='application/x-rar' and mimeType!='application/rar'
+              and not mimeType contains 'application/vnd' and mimeType!='application/json'
+              and mimeType!='video/mp2p' and mimeType!='application/octet-stream' """
+    if os.environ['GDRIVE_QUICK_SCAN'] == '1':
+        query = f"{query} and not '{processed_folder_id}' in parents"
     while True:
         # Call the Drive v3 API
         results = service.files().list(
             pageSize=100,
             pageToken=next_page_token,
             fields='*',
-            q=f"not '{ignore_folder_id}' in parents and not '{processed_folder_id}' in parents "
-              f"and mimeType!='audio/mp3'and mimeType!='image/jpeg' "
-              f"and mimeType!='audio/x-m4a' "
-              f"and mimeType!='image/png' and mimeType!='application/x-subrip' "
-              f"and mimeType!='text/plain' and mimeType!='application/pdf' "
-              f"and mimeType!='application/zip' and mimeType!='text/x-url' "
-              f"and mimeType!='application/x-rar' and mimeType!='application/rar' "
-              f"and not mimeType contains 'application/vnd' and mimeType!='application/json' "
-              f"and mimeType!='video/mp2p' and mimeType!='application/octet-stream'"
-
+            q=query
         ).execute()
         items = results.get('files', [])
         next_page_token = results.get('nextPageToken')
