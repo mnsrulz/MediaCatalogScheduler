@@ -64,6 +64,7 @@ def execute():
             fields='*',
             q=f"not '{ignore_folder_id}' in parents and not '{processed_folder_id}' in parents "
               f"and mimeType!='audio/mp3'and mimeType!='image/jpeg' "
+              f"and mimeType!='audio/x-m4a' "
               f"and mimeType!='image/png' and mimeType!='application/x-subrip' "
               f"and mimeType!='text/plain' and mimeType!='application/pdf' "
               f"and mimeType!='application/zip' and mimeType!='text/x-url' "
