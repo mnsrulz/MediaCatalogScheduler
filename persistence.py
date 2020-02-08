@@ -40,6 +40,7 @@ def persist_google_drive_item(media_item):
     if existing_item is None:
         db_media_catalog.insert({
             'ts': datetime.utcnow(),
+            'ts_update': datetime.utcnow(),
             'source': 'google-drive',
             'media_document': media_item
         })
