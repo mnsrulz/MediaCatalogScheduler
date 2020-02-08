@@ -85,10 +85,13 @@ def execute():
             for media_item in items:
                 persistence.persist_google_drive_item(media_item)
                 print('Calling add parent for google drive file: ' + media_item['id'])
-                service.files().update(
+                try:
+                    service.files().update(
                     fileId=media_item['id'],
                     addParents=processed_folder_id,
-                ).execute()
+                    ).execute()
+                except:
+                    print('Error occurred while adding media item to google drive')
             print('Finished processing the records')
 
         if not next_page_token:
