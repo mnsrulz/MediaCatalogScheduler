@@ -72,6 +72,8 @@ def execute():
             pageSize=100,
             pageToken=next_page_token,
             fields='*',
+            supportsAllDrives=1,
+            includeItemsFromAllDrives=1,
             q=query
         ).execute()
         items = results.get('files', [])
